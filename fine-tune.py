@@ -75,3 +75,6 @@ trainer.train()
 # Evaluate the model
 eval_results = trainer.evaluate()
 print(eval_results)
+
+# Save the fine-tuned model
+trainer.save_model("./results/checkpoint-1")
