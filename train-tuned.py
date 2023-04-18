@@ -1,15 +1,24 @@
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer
 from datasets import Dataset
+from data import parse_csv
 
-input_sequences = []
+# Sample input sequences
+symbol = 'ALB'
+input_sequences = parse_csv(symbol)
+model = 'flowfree/bert-finetuned-cryptos'
 
 # Convert input sequences to a dictionary of lists
 data = {'text': [], 'label': []}
 for seq in input_sequences:
-    price_open, price_high, price_low, price_close, timestamp, date = seq
-    text = f"Symbol: 'VSP' Open: {price_open} High: {price_high} Low: {price_low} Close: {price_close} Timestamp: {timestamp} Date: {date}"
+    price_open = seq['ohlc'][0]
+    price_high = seq['ohlc'][1]
+    price_low = seq['ohlc'][2]
+    price_close = seq['ohlc'][3]
+    text = f"Price data for symbol: {seq['symbol']} on date: {seq['date']} at timestamp: {seq['timestamp']} => Open: {price_open} High: {price_high} Low: {price_low} Close: {price_close}"
     label = 1 if price_close > price_open else 0
+    print(f"appending text: {text}")
     data['text'].append(text)
+    print(f"appending label: {label}")
     data['label'].append(label)
 
 # Split data into train, validation, and test sets
