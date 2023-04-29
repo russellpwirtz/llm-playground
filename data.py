@@ -12,6 +12,9 @@ def parse_csv(symbol: str, name: str = 'data.csv') -> list:
         # Loop through each row in the file
         result = []
         for row in reader:
+            # Check if it's the headers row
+            if 'timestamp' in row:
+                continue
             # Check if the row has six elements
             if len(row) == 6:
                 inner_result = {}
