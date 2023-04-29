@@ -1,5 +1,4 @@
 from datasets import Dataset
-import torch
 from transformers import BertConfig, BertForSequenceClassification, BertTokenizerFast, Trainer, TrainingArguments
 from data import parse_csv
 
@@ -18,8 +17,13 @@ for seq in input_sequences:
     text = f"Price data for symbol: {seq['symbol']} on date: {seq['date']} at timestamp: {seq['timestamp']} => Open: {price_open} High: {price_high} Low: {price_low} Close: {price_close}"
 
     percentage_change = ((price_close - price_open) / price_open) * 100
+    # Scale the percentage change to a range of 0 to 10
     scaled_value = max(-10, min(10, percentage_change))
-    label = int(scaled_value)
+    # Normalize the value to 0 to 10
+    normalized_value = (scaled_value + 10) / 2
+    label = int(normalized_value)
+    if label != 5:
+        print("Changed price!")
 
     print(f"appending text: {text}")
     data['text'].append(text)
@@ -48,7 +52,7 @@ def tokenize_function(examples):
 
 # Preprocess the dataset
 tokenizer = BertTokenizerFast.from_pretrained(model)
-config = BertConfig.from_pretrained(model, num_labels=21)
+config = BertConfig.from_pretrained(model, num_labels=11)
 
 # Load the pre-trained model
 model = BertForSequenceClassification.from_pretrained(
