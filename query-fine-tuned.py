@@ -34,8 +34,33 @@ model_path = 'results/checkpoint-final'
 predictor = CryptoPredictor(model_path)
 
 # Example input sequence
-input_sequence = "Symbol: ALB Open: 0.00168337 High: 0.00168337 Low: 0.00168337 Close: 0.00168337 Timestamp: 1681403760 Date: 2023-04-13T16:36:00"
+input_sequence = "Price data for symbol: ALB on date: 2022-08-01 at timestamp: 1200 => Open: 100 High: 120 Low: 95 Close: 110"
 
 # Make a prediction
 predicted_label = predictor.predict(input_sequence)
 print(f"Predicted label: {predicted_label}")
+
+
+# 1. An input sequence with a clear increase in closing price compared to the opening price:
+#    Input: `"Price data for symbol: ALB on date: 2022-08-01 at timestamp: 1200 => Open: 100 High: 120 Low: 95 Close: 110"`
+# 2. An input sequence with a clear decrease in closing price compared to the opening price:
+#    Input: `"Price data for symbol: ALB on date: 2022-08-02 at timestamp: 1200 => Open: 110 High: 115 Low: 90 Close: 95"`
+# 3. An input sequence where the closing price is equal to the opening price:
+#    Input: `"Price data for symbol: ALB on date: 2022-08-03 at timestamp: 1200 => Open: 100 High: 110 Low: 90 Close: 100"`
+
+# # Sample input for prediction
+# symbol = 'ALB'
+# future_date = '2022-12-31'
+# future_timestamp = '09:30:00'
+# future_opening_price = 100.0
+
+# future_text = f"Price data for symbol: {symbol} on date: {future_date} at timestamp: {future_timestamp} => Open: {future_opening_price}"
+
+# inputs = tokenizer(future_text, return_tensors="pt", padding="max_length", truncation=True)
+
+# # Generate prediction
+# with torch.no_grad():
+#     outputs = model(**inputs)
+#     prediction = outputs[0].numpy()[0][0]
+
+# print(f"The predicted percentage change for {symbol} on {future_date} is {prediction:.2f}")
