@@ -8,6 +8,8 @@ symbol = 'ALB'
 input_sequences = parse_csv(symbol)
 model = 'flowfree/bert-finetuned-cryptos'
 
+large_threshold = 0.05  
+
 # Convert input sequences to a dictionary of lists
 data = {'text': [], 'label': []}
 for seq in input_sequences:
@@ -16,7 +18,19 @@ for seq in input_sequences:
     price_low = seq['ohlc'][2]
     price_close = seq['ohlc'][3]
     text = f"Price data for symbol: {seq['symbol']} on date: {seq['date']} at timestamp: {seq['timestamp']} => Open: {price_open} High: {price_high} Low: {price_low} Close: {price_close}"
-    label = 1 if price_close > price_open else 0
+    
+#     label = 1 if price_close > price_open else 0
+    percentage_change = (price_close - price_open) / price_open
+    if percentage_change == 0:
+        label = 0
+    elif percentage_change > 0:
+        label = min(percentage_change / large_threshold, 1)
+    else:
+        label = max(percentage_change / large_threshold, -1)
+
+    data['text'].append(text)
+    data['label'].append(label)
+    
     print(f"appending text: {text}")
     data['text'].append(text)
     print(f"appending label: {label}")
@@ -76,5 +90,42 @@ trainer.train()
 eval_results = trainer.evaluate()
 print(eval_results)
 
+test_results = trainer.evaluate(test_dataset)
+print(test_results)
+
 # Save the fine-tuned model
 trainer.save_model("./results/checkpoint-1")
+
+
+# 1. An input sequence with a clear increase in closing price compared to the opening price:
+#    Input: `"Price data for symbol: ALB on date: 2022-08-01 at timestamp: 1200 => Open: 100 High: 120 Low: 95 Close: 110"`
+#    Expected label: `1` (closing price is greater than opening price)
+
+# 2. An input sequence with a clear decrease in closing price compared to the opening price:
+#    Input: `"Price data for symbol: ALB on date: 2022-08-02 at timestamp: 1200 => Open: 110 High: 115 Low: 90 Close: 95"`
+#    Expected label: `0` (closing price is less than opening price)
+
+# 3. An input sequence where the closing price is equal to the opening price:
+#    Input: `"Price data for symbol: ALB on date: 2022-08-03 at timestamp: 1200 => Open: 100 High: 110 Low: 90 Close: 100"`
+#    Expected label: `0` (closing price is equal to opening price, considered as not increasing)
+
+
+
+
+# 1. Create an input string with only the date and opening price, e.g.:
+#    `"Price data for symbol: ALB on date: 2022-08-01 at timestamp: 1200 => Open: 100"`
+
+# 2. Use the same tokenizer that was used during training to preprocess the input string:
+#    ```python
+#    input_text = "Price data for symbol: ALB on date: 2022-08-01 at timestamp: 1200 => Open: 100"
+#    tokenized_input = tokenizer(input_text, padding='max_length', truncation=True, return_tensors='pt')
+#    ```
+
+# 3. Pass the tokenized input to the trained model to make a prediction:
+#    ```python
+#    model.eval()
+#    with torch.no_grad():
+#        outputs = model(**tokenized_input)
+#        logits = outputs.logits
+#        predicted_label = torch.argmax(logits, dim=1).item()
+#    ```
